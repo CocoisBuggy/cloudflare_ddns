@@ -1,6 +1,7 @@
 import requests
 import logging
 import os
+import json
 from datetime import datetime
 
 # Configure logging
@@ -22,12 +23,16 @@ def get_public_ip():
 
 def update_dns_record(zone_id, dns_record_id, email, api_key, domain, ip):
     """Update the DNS record on Cloudflare."""
-    url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records/{dns_record_id}"
+    url = (
+        "https://api.cloudflare.com/client/v4/zones/%(zone_id)s/dns_records/%(record_id)s"
+        % {"zone_id": zone_id, "record_id": dns_record_id}
+    )
+    
     headers = {
         "Content-Type": "application/json",
-        "X-Auth-Email": email,
-        "X-Auth-Key": api_key
+        "Authorization": f"Bearer {api_key}",
     }
+    
     data = {
         "comment": "Domain verification record",
         "content": ip,
@@ -39,8 +44,10 @@ def update_dns_record(zone_id, dns_record_id, email, api_key, domain, ip):
 
     try:
         response = requests.put(url, headers=headers, json=data, timeout=10)
-        response.raise_for_status()
+        # response.raise_for_status()
         result = response.json()
+        
+        logging.info(json.dumps(result, indent=4))
 
         if result.get("success"):
             logging.info(f"DNS record updated successfully for {domain} with IP {ip}.")
