@@ -9,12 +9,4 @@ pkgs.mkShell {
       ]
     ))
   ];
-
-  mkShell = ''
-    if [ -f ".env" ]; then
-      set -a
-      source .env
-      echo "Sourcing local .env into dev environment 😄"
-    fi
-  '';
 }
