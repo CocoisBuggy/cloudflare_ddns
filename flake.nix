@@ -66,7 +66,7 @@
         };
 
         # For the sake of my adoring fans, we expose some nixos module services.
-        nixosModules.coco-ddns =
+        nixosModules.default =
           {
             config,
             lib,
