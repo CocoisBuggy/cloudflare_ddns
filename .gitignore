@@ -1,2 +1,6 @@
 .env
 **__pycache__
+result
+**.egg-info
+dist
+**.log

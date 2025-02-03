@@ -1,12 +1,11 @@
 {
   pkgs ? import <nixpkgs> { },
 }:
+let
+
+  client = import ./default.nix { inherit pkgs; };
+
+in
 pkgs.mkShell {
-  buildInputs = [
-    (pkgs.python312.withPackages (
-      ps: with ps; [
-        requests
-      ]
-    ))
-  ];
+  buildInputs = [ client ];
 }
