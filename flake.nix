@@ -64,6 +64,44 @@
             echo "Cloudflare DDNS Client development shell"
           '';
         };
+
+        # For the sake of my adoring fans, we expose some nixos module services.
+        nixosModules.coco-ddns =
+          {
+            config,
+            lib,
+            pkgs,
+            ...
+          }:
+          {
+            options.services.coco-ddns = {
+              enable = lib.mkEnableOption "Enable coco-ddns service";
+              interval = lib.mkOption {
+                type = lib.types.str;
+                default = "*-*-* 00/05:00:00";
+                description = "Systemd timer interval (see systemd.time(7))";
+              };
+            };
+
+            config = lib.mkIf config.services.coco-ddns.enable {
+              systemd.services.coco-ddns = {
+                description = "Dynamic DNS updater";
+                serviceConfig = {
+                  Type = "oneshot";
+                  ExecStart = "${self.packages.x86_64-linux.coco-ddns}/bin/coco-ddns";
+                  Restart = "no";
+                };
+              };
+
+              systemd.timers.coco-ddns = {
+                wantedBy = [ "timers.target" ];
+                timerConfig = {
+                  OnCalendar = config.services.coco-ddns.interval;
+                  Persistent = true;
+                };
+              };
+            };
+          };
       }
     );
 }
