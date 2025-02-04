@@ -156,8 +156,6 @@
                   description = "Dynamic DNS updater";
                   serviceConfig = {
                     Type = "oneshot";
-                    # At runtime, read the specified keyfile path and, if it is present,
-                    # use it over the provided literal value.
                     ExecStart = script;
                     Restart = "no";
                   };
