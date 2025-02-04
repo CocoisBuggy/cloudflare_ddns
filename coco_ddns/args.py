@@ -48,4 +48,4 @@ parser.add_argument(
     """,
     default=os.getenv("CLOUDFLARE_API_KEY"),
 )
-parser.add_argument("--domain-name", default=os.getenv("CLOUDFLARE_DOMAIN_NAME"))
+parser.add_argument("--domain_name", default=os.getenv("CLOUDFLARE_DOMAIN_NAME"))
