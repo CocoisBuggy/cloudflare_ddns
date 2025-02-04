@@ -73,6 +73,23 @@
             pkgs,
             ...
           }:
+          let
+            docs = {
+              zone = ''
+                You can find this ID in the cloudflare dashboard - Just scroll down on the
+                domain view, there is an 'API' section. There are good reasons not to make
+                this ID be fetched via the API (Though that is actually possible, it is for
+                now out of scope for this script.)
+              '';
+              record = ''
+                Like zones in cloudflare, records have arbitrarily assigned IDs that you can
+                use to address a record. This can be useful because if you edit this record in
+                the cloudflare dashboard, even in drastic ways, this script will be able to
+                find and update it in perpetuity. If you have this value, you should use it.
+              '';
+              domain = "If this is an A record, you can specify a domain name or sub domain name";
+            };
+          in
           {
             options.services.coco-ddns = {
               enable = lib.mkEnableOption "Enable coco-ddns service";
@@ -84,28 +101,18 @@
 
               zone_id = lib.mkOption {
                 type = lib.types.str;
-                description = ''
-                  You can find this ID in the cloudflare dashboard - Just scroll down on the
-                  domain view, there is an 'API' section. There are good reasons not to make
-                  this ID be fetched via the API (Though that is actually possible, it is for
-                  now out of scope for this script.)
-                '';
+                description = docs.zone;
               };
 
               record = lib.mkOption {
                 type = lib.types.str;
-                description = ''
-                  Like zones in cloudflare, records have arbitrarily assigned IDs that you can
-                  use to address a record. This can be useful because if you edit this record in
-                  the cloudflare dashboard, even in drastic ways, this script will be able to
-                  find and update it in perpetuity. If you have this value, you should use it.
-                '';
+                description = docs.record;
               };
 
               domain_name = lib.mkOption {
                 type = lib.types.str;
                 example = "example.com";
-                description = "If this is an A record, you can specify a domain name or sub domain name";
+                description = docs.domain;
               };
 
               api_key_file = lib.mkOption {
@@ -116,18 +123,18 @@
 
               zone_id_file = lib.mkOption {
                 type = lib.types.str;
-                description = config.services.coco-ddns.zone_id;
+                description = docs.zone;
               };
 
               record_file = lib.mkOption {
                 type = lib.types.str;
-                description = config.services.coco-ddns.record;
+                description = docs.record;
               };
 
               domain_name_file = lib.mkOption {
                 type = lib.types.str;
                 example = "example.com";
-                description = config.services.coco-ddns.domain_name;
+                description = docs.domain;
               };
             };
 
