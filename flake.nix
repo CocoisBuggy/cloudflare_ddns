@@ -93,7 +93,7 @@
               };
 
               record = lib.mkOption {
-                types = lib.types.str;
+                type = lib.types.str;
                 description = ''
                   Like zones in cloudflare, records have arbitrarily assigned IDs that you can
                   use to address a record. This can be useful because if you edit this record in
@@ -109,7 +109,7 @@
               };
 
               api_key_file = lib.mkOption {
-                types = lib.types.str;
+                type = lib.types.str;
                 description = "For security, I like to pass this in as a file that contains the keyfile (sops, for example)";
                 example = "/run/secrets/keys/cloudflare";
               };
@@ -120,19 +120,14 @@
               };
 
               record_file = lib.mkOption {
-                types = lib.types.str;
-                description = ''
-                  Like zones in cloudflare, records have arbitrarily assigned IDs that you can
-                  use to address a record. This can be useful because if you edit this record in
-                  the cloudflare dashboard, even in drastic ways, this script will be able to
-                  find and update it in perpetuity. If you have this value, you should use it.
-                '';
+                type = lib.types.str;
+                description = config.services.coco-ddns.record;
               };
 
               domain_name_file = lib.mkOption {
                 type = lib.types.str;
                 example = "example.com";
-                decription = "If this is an A record, you can specify a domain name or sub domain name";
+                decription = config.services.coco-ddns.domain_name;
               };
             };
 
