@@ -150,6 +150,13 @@
                 readFile = file_name: "$(cat ${file_name})";
                 pass =
                   file_name: val: "$(if [[ -f ${file_name} ]]; then ${readFile file_name} else echo ${val} fi)";
+                script = pkgs.writers.writeBashScript "wrapper" ''
+                  ${self.packages."${system}".default}/bin/coco-ddns \
+                    --zone_id     ${pass cfg.zone_id_file cfg.zone_id} \
+                    --record      ${pass cfg.record_file cfg.record} \
+                    --domain_name ${pass cfg.domain_name_file cfg.domain_name} \
+                    --api_key     ${readFile cfg.api_key_file}
+                '';
               in
               lib.mkIf config.services.coco-ddns.enable {
                 systemd.services.coco-ddns = {
@@ -158,13 +165,7 @@
                     Type = "oneshot";
                     # At runtime, read the specified keyfile path and, if it is present,
                     # use it over the provided literal value.
-                    ExecStart = ''
-                      ${self.packages."${system}".default}/bin/coco-ddns \
-                        --zone_id     ${pass cfg.zone_id_file cfg.zone_id} \
-                        --record      ${pass cfg.record_file cfg.record} \
-                        --domain_name ${pass cfg.domain_name_file cfg.domain_name} \
-                        --api_key     ${readFile cfg.api_key_file}
-                    '';
+                    ExecStart = script;
                     Restart = "no";
                   };
                 };
