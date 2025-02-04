@@ -27,6 +27,7 @@ def update_dns_record(
     record: str = "",
     api_key: str = "",
     dry_run=False,
+    domain_name: str = "",
 ):
     """Update the DNS record on Cloudflare."""
 
@@ -48,11 +49,13 @@ def update_dns_record(
     data = {
         "comment": "Domain verification record",
         "content": ip,
-        # "name": domain,
         "proxied": True,
         "ttl": 3600,
         "type": "A",
     }
+
+    if domain_name:
+        data["name"] = domain_name
 
     log.debug(url)
 
@@ -102,6 +105,7 @@ def main():
             zone_id=args.zone_id,
             record=args.record,
             api_key=args.api_key,
+            domain_name=args.domain_name,
             dry_run=False,
         )
     else:
