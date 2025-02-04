@@ -81,6 +81,38 @@
                 default = "*-*-* 00/05:00:00";
                 description = "Systemd timer interval (see systemd.time(7))";
               };
+
+              zone_id = lib.mkOption {
+                type = lib.types.str;
+                description = ''
+                  You can find this ID in the cloudflare dashboard - Just scroll down on the
+                  domain view, there is an 'API' section. There are good reasons not to make
+                  this ID be fetched via the API (Though that is actually possible, it is for
+                  now out of scope for this script.)
+                '';
+              };
+
+              record = lib.mkOption {
+                types = lib.types.str;
+                description = ''
+                  Like zones in cloudflare, records have arbitrarily assigned IDs that you can
+                  use to address a record. This can be useful because if you edit this record in
+                  the cloudflare dashboard, even in drastic ways, this script will be able to
+                  find and update it in perpetuity. If you have this value, you should use it.
+                '';
+              };
+
+              api_key_file = lib.mkOption {
+                types = lib.types.str;
+                description = "For security, I like to pass this in as a file that contains the keyfile (sops, for example)";
+                example = "/run/secrets/keys/cloudflare";
+              };
+
+              domain_name = lib.mkOption {
+                type = lib.types.str;
+                example = "example.com";
+                decription = "If this is an A record, you can specify a domain name or sub domain name";
+              };
             };
 
             config = lib.mkIf config.services.coco-ddns.enable {
@@ -88,7 +120,13 @@
                 description = "Dynamic DNS updater";
                 serviceConfig = {
                   Type = "oneshot";
-                  ExecStart = "${self.packages."${system}".default}/bin/coco-ddns";
+                  ExecStart = ''
+                    ${self.packages."${system}".default}/bin/coco-ddns \
+                      --zone_id ${config.services.coco-ddns.zone_id} \
+                      --record ${config.services.coco-ddns.record} \
+                      --api_key $(cat ${config.services.coco-ddns.api_key_file}) \
+                      --domain_name ${config.services.coco-ddns.domain_name}
+                  '';
                   Restart = "no";
                 };
               };
