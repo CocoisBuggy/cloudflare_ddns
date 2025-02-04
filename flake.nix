@@ -88,7 +88,7 @@
                 description = "Dynamic DNS updater";
                 serviceConfig = {
                   Type = "oneshot";
-                  ExecStart = "${self.packages.x86_64-linux.coco-ddns}/bin/coco-ddns";
+                  ExecStart = "${self.packages}/bin/coco-ddns";
                   Restart = "no";
                 };
               };
