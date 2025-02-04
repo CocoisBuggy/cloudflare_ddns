@@ -154,7 +154,7 @@
                     # use it over the provided literal value.
                     ExecStart = ''
                       ${self.packages."${system}".default}/bin/coco-ddns \
-                        --zone_id     ${pass cfg.zone_file cfg.zone_id} \
+                        --zone_id     ${pass cfg.zone_id_file cfg.zone_id} \
                         --record      ${pass cfg.record_file cfg.record} \
                         --domain_name ${pass cfg.domain_name_file cfg.domain_name} \
                         --api_key     ${readFile cfg.api_key_file}
