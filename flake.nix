@@ -105,7 +105,7 @@
               domain_name = lib.mkOption {
                 type = lib.types.str;
                 example = "example.com";
-                decription = "If this is an A record, you can specify a domain name or sub domain name";
+                description = "If this is an A record, you can specify a domain name or sub domain name";
               };
 
               api_key_file = lib.mkOption {
@@ -127,7 +127,7 @@
               domain_name_file = lib.mkOption {
                 type = lib.types.str;
                 example = "example.com";
-                decription = config.services.coco-ddns.domain_name;
+                description = config.services.coco-ddns.domain_name;
               };
             };
 
