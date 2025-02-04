@@ -102,33 +102,28 @@
               zone_id = lib.mkOption {
                 type = lib.types.str;
                 description = docs.zone;
-                default = "1234";
               };
 
               record = lib.mkOption {
                 type = lib.types.str;
                 description = docs.record;
-                default = "1234";
               };
 
               domain_name = lib.mkOption {
                 type = lib.types.str;
                 example = "example.com";
                 description = docs.domain;
-                default = "example.com";
               };
 
               api_key_file = lib.mkOption {
                 type = lib.types.str;
                 description = "For security, I like to pass this in as a file that contains the keyfile (sops, for example)";
                 example = "/run/secrets/keys/cloudflare";
-                default = "/run/secrets/key";
               };
 
               zone_id_file = lib.mkOption {
                 type = lib.types.str;
                 description = docs.zone;
-                default = "/run/secrets/zone";
               };
 
               record_file = lib.mkOption {
@@ -140,7 +135,6 @@
                 type = lib.types.str;
                 example = "example.com";
                 description = docs.domain;
-                default = "/run/secrets/domain";
               };
             };
 
@@ -148,14 +142,13 @@
               let
                 cfg = config.services.coco-ddns;
                 readFile = file_name: "$(cat ${file_name})";
-                pass =
-                  file_name: val: "$(if [[ -f ${file_name} ]]; then ${readFile file_name}; else echo \"${val}\"; fi)";
+                pass = val: if cfg ? "${val}_file" then "$(cat ${cfg."${val}_file"})" else val;
                 script = pkgs.writers.writeBash "coco-ddns-wrapper" ''
                   ${self.packages."${system}".default}/bin/coco-ddns \
-                    --zone_id     ${pass cfg.zone_id_file cfg.zone_id} \
-                    --record      ${pass cfg.record_file cfg.record} \
-                    --domain_name ${pass cfg.domain_name_file cfg.domain_name} \
-                    --api_key     ${readFile cfg.api_key_file}
+                    --zone_id=${pass "zone_id"} \
+                  --record=${pass "record"} \
+                    --domain_name=${pass "domain_name"} \
+                    --api_key=${readFile cfg.api_key_file}
                 '';
               in
               lib.mkIf config.services.coco-ddns.enable {
