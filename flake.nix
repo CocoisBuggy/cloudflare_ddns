@@ -149,8 +149,8 @@
                 cfg = config.services.coco-ddns;
                 readFile = file_name: "$(cat ${file_name})";
                 pass =
-                  file_name: val: "$(if [[ -f ${file_name} ]]; then ${readFile file_name} else echo ${val} fi)";
-                script = pkgs.writers.writeBash "wrapper" ''
+                  file_name: val: "$(if [[ -f ${file_name} ]]; then ${readFile file_name}; else echo \"${val}\"; fi)";
+                script = pkgs.writers.writeBash "coco-ddns-wrapper" ''
                   ${self.packages."${system}".default}/bin/coco-ddns \
                     --zone_id     ${pass cfg.zone_id_file cfg.zone_id} \
                     --record      ${pass cfg.record_file cfg.record} \
