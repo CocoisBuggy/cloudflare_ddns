@@ -102,28 +102,33 @@
               zone_id = lib.mkOption {
                 type = lib.types.str;
                 description = docs.zone;
+                default = "1234";
               };
 
               record = lib.mkOption {
                 type = lib.types.str;
                 description = docs.record;
+                default = "1234";
               };
 
               domain_name = lib.mkOption {
                 type = lib.types.str;
                 example = "example.com";
                 description = docs.domain;
+                default = "example.com";
               };
 
               api_key_file = lib.mkOption {
                 type = lib.types.str;
                 description = "For security, I like to pass this in as a file that contains the keyfile (sops, for example)";
                 example = "/run/secrets/keys/cloudflare";
+                default = "/run/secrets/key";
               };
 
               zone_id_file = lib.mkOption {
                 type = lib.types.str;
                 description = docs.zone;
+                default = "/run/secrets/zone";
               };
 
               record_file = lib.mkOption {
@@ -135,6 +140,7 @@
                 type = lib.types.str;
                 example = "example.com";
                 description = docs.domain;
+                default = "/run/secrets/domain";
               };
             };
 
