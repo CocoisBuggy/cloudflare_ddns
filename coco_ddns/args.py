@@ -48,4 +48,20 @@ parser.add_argument(
     """,
     default=os.getenv("CLOUDFLARE_API_KEY"),
 )
+
 parser.add_argument("--domain_name", default=os.getenv("CLOUDFLARE_DOMAIN_NAME"))
+
+parser.add_argument(
+    "--proxy",
+    help="""
+    By default, the tool will keep Cloudflare's proxy setting ON. This is a good idea for
+    many use cases but you may find that in some instances you need to disable this.
+    If, for example, you are trying to hit certain ports or use UDP traffic for non HTTP/S
+    traffic you may run into problems (This may only apply to people who are using the free
+    version of the cloudflare services, so don't quote me on it).
+
+    A concrete example would be trying to create a wireguard link to a home network. If you are
+    trying to not pay a lot, you can just toggle proxy off.
+    """,
+    default=True,
+)

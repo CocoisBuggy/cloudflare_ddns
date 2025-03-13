@@ -2,6 +2,7 @@
 
 import json
 import logging
+from datetime import datetime
 
 import requests
 
@@ -28,6 +29,7 @@ def update_dns_record(
     api_key: str = "",
     dry_run=False,
     domain_name: str = "",
+    cloudflare_proxy=True,
 ):
     """Update the DNS record on Cloudflare."""
 
@@ -47,9 +49,9 @@ def update_dns_record(
     }
 
     data = {
-        "comment": "Domain verification record",
+        "comment": f"Domain verification record @ ({datetime.now()})",
         "content": ip,
-        "proxied": True,
+        "proxied": cloudflare_proxy,
         "ttl": 3600,
         "type": "A",
     }

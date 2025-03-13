@@ -32,11 +32,21 @@ and then in your `configuration.nix`
 
     services.coco-ddns = {
         enable = true;
-        interval = "*-*-* 00/5:00:00";
-        zone_id_file = "/run/secrets/cloudflare/zone_id";
-        record_file = "/run/secrets/cloudflare/record_id";
-        api_key_file = "/run/secrets/cloudflare/token";
-        domain_name_file = "/run/secrets/cloudflare/domain_name";
+        hosts = {
+            "example.com" = {
+                interval = "*-*-* 00/5:00:00";
+                zone_id_file = "/run/secrets/cloudflare/zone_id";
+                record_file = "/run/secrets/cloudflare/record_id";
+                api_key_file = "/run/secrets/cloudflare/token";
+            }
+            "wireguard.example.com" = {
+                disable_proxy = true;
+                interval = "*-*-* 00/5:00:00";
+                zone_id_file = "/run/secrets/cloudflare/zone_id";
+                record_file = "/run/secrets/cloudflare/record_id";
+                api_key_file = "/run/secrets/cloudflare/token";
+            };;
+        };
     };
     ...
 }
@@ -53,14 +63,17 @@ The above example uses files, which I feel is the most secure way to go about it
 
     services.coco-ddns = {
         enable = true;
-        interval = "*-*-* 00/5:00:00";
-        zone_id = "...";
-        record = "...";
-        domain_name = "...";
-        # I won't let you pass this down, sorry. If you make a little keyfile locally you can pass it in as a nix path
-        # and it should get copied to the nix store and interpreted as a string.
-        # It is not a good vibe to pass this in literally, so i'm opinionated here.
-        api_key_file = "<key>";
+        hosts = {
+            "example.com" = {
+                interval = "*-*-* 00/5:00:00";
+                zone_id = "...";
+                record = "...";
+                # I won't let you pass this down, sorry. If you make a little keyfile locally you can pass it in as a nix path
+                # and it should get copied to the nix store (ALSO A NONO) and interpreted as a string.
+                # It is not a good vibe to pass this in literally, so i'm opinionated here.
+                api_key_file = "<key>";
+            };
+        };
     };
     ...
 }

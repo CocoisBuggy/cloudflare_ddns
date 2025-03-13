@@ -19,9 +19,12 @@
       in
       {
         packages = {
+          # The package itself is a simple utility. it does not do its own caching, it's own scheduling
+          # it's own instrumentation, or it's own setup. As a result it's pretty straightforward to package
+          # this python program into the flake
           default = pkgs.python3Packages.buildPythonApplication {
             pname = "coco-ddns";
-            version = "0.1.0";
+            version = "0.2.0";
             src = ./.;
             pyproject = true;
 
@@ -74,67 +77,52 @@
             ...
           }:
           let
-            docs = {
-              zone = ''
-                You can find this ID in the cloudflare dashboard - Just scroll down on the
-                domain view, there is an 'API' section. There are good reasons not to make
-                this ID be fetched via the API (Though that is actually possible, it is for
-                now out of scope for this script.)
-              '';
-              record = ''
-                Like zones in cloudflare, records have arbitrarily assigned IDs that you can
-                use to address a record. This can be useful because if you edit this record in
-                the cloudflare dashboard, even in drastic ways, this script will be able to
-                find and update it in perpetuity. If you have this value, you should use it.
-              '';
-              domain = "If this is an A record, you can specify a domain name or sub domain name";
-            };
+            inherit (lib) types;
+            instanceOpts =
+              { ... }:
+              {
+                options = {
+                  interval = lib.mkOption {
+                    type = lib.types.str;
+                    default = "*-*-* 00/05:00:00";
+                    description = "Systemd timer interval (see systemd.time(7))";
+                  };
+
+                  proxy = lib.mkOption {
+                    type = lib.types.boolean;
+                    default = true;
+                    description = "Disable or enable cloudlfares proxy";
+                  };
+
+                  zone_id = lib.mkOption {
+                    type = lib.types.str;
+                  };
+
+                  record = lib.mkOption {
+                    type = lib.types.str;
+                  };
+
+                  api_key_file = lib.mkOption {
+                    type = lib.types.str;
+                    description = "For security, I like to pass this in as a file that contains the keyfile (sops, for example)";
+                    example = "/run/secrets/keys/cloudflare";
+                  };
+
+                  zone_id_file = lib.mkOption {
+                    type = lib.types.str;
+                  };
+
+                  record_file = lib.mkOption {
+                    type = lib.types.str;
+                  };
+                };
+              };
           in
           {
             options.services.coco-ddns = {
               enable = lib.mkEnableOption "Enable coco-ddns service";
-              interval = lib.mkOption {
-                type = lib.types.str;
-                default = "*-*-* 00/05:00:00";
-                description = "Systemd timer interval (see systemd.time(7))";
-              };
-
-              zone_id = lib.mkOption {
-                type = lib.types.str;
-                description = docs.zone;
-              };
-
-              record = lib.mkOption {
-                type = lib.types.str;
-                description = docs.record;
-              };
-
-              domain_name = lib.mkOption {
-                type = lib.types.str;
-                example = "example.com";
-                description = docs.domain;
-              };
-
-              api_key_file = lib.mkOption {
-                type = lib.types.str;
-                description = "For security, I like to pass this in as a file that contains the keyfile (sops, for example)";
-                example = "/run/secrets/keys/cloudflare";
-              };
-
-              zone_id_file = lib.mkOption {
-                type = lib.types.str;
-                description = docs.zone;
-              };
-
-              record_file = lib.mkOption {
-                type = lib.types.str;
-                description = docs.record;
-              };
-
-              domain_name_file = lib.mkOption {
-                type = lib.types.str;
-                example = "example.com";
-                description = docs.domain;
+              instances = lib.mkOption {
+                type = with types; attrsOf (submodule instanceOpts);
               };
             };
 
@@ -142,32 +130,54 @@
               let
                 cfg = config.services.coco-ddns;
                 readFile = file_name: "$(cat ${file_name})";
-                pass = val: if cfg ? "${val}_file" then "$(cat ${cfg."${val}_file"})" else val;
-                script = pkgs.writers.writeBash "coco-ddns-wrapper" ''
-                  ${self.packages."${system}".default}/bin/coco-ddns \
-                    --zone_id=${pass "zone_id"} \
-                  --record=${pass "record"} \
-                    --domain_name=${pass "domain_name"} \
-                    --api_key=${readFile cfg.api_key_file}
-                '';
+
+                instances = cfg.interfaces;
+                # Create a systemd service for each instance.
+                serviceUnits = lib.foldAttrs (
+                  acc: name: instance:
+                  let
+                    pass = val: if instance ? "${val}_file" then "$(cat ${instance."${val}_file"})" else val;
+                    script = pkgs.writers.writeBash "coco-ddns-wrapper-${name}" ''
+                      ${self.packages."${system}".default}/bin/coco-ddns \
+                        --zone_id=${pass "zone_id"} \
+                        --record=${pass "record"} \
+                        --domain_name=${name} \
+                        --api_key=${readFile instance.api_key_file} \
+                        --proxy=${instance.proxy or true}
+                    '';
+                  in
+                  acc
+                  // {
+                    "coco-ddns-${name}" = {
+                      description = "coco-ddns service for ${name}";
+                      serviceConfig = {
+                        Type = "oneshot";
+                        ExecStart = script;
+                        Restart = "no";
+                      };
+                    };
+                  }
+                ) instances;
+
+                # Create a systemd timer for each enabled instance.
+                timerUnits = lib.foldAttrs (
+                  acc: name: instance:
+                  acc
+                  // {
+                    "coco-ddns-${name}" = {
+                      wantedBy = [ "timers.target" ];
+                      timerConfig = {
+                        # Use the instance-specific interval if provided.
+                        OnCalendar = instance.interval or "*-*-* 00/05:00:00";
+                        Persistent = true;
+                      };
+                    };
+                  }
+                ) instances;
               in
               lib.mkIf config.services.coco-ddns.enable {
-                systemd.services.coco-ddns = {
-                  description = "Dynamic DNS updater";
-                  serviceConfig = {
-                    Type = "oneshot";
-                    ExecStart = script;
-                    Restart = "no";
-                  };
-                };
-
-                systemd.timers.coco-ddns = {
-                  wantedBy = [ "timers.target" ];
-                  timerConfig = {
-                    OnCalendar = config.services.coco-ddns.interval;
-                    Persistent = true;
-                  };
-                };
+                systemd.services = serviceUnits;
+                systemd.timers = timerUnits;
               };
           };
       }
