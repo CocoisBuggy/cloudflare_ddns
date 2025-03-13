@@ -131,7 +131,6 @@
                 cfg = config.services.coco-ddns;
                 readFile = file_name: "$(cat ${file_name})";
 
-                hosts = cfg.hosts;
                 # Create a systemd service for each instance.
                 serviceUnits = lib.foldAttrs (
                   acc: name: instance:
@@ -157,7 +156,7 @@
                       };
                     };
                   }
-                ) hosts;
+                ) { } cfg.hosts;
 
                 # Create a systemd timer for each enabled instance.
                 timerUnits = lib.foldAttrs (
@@ -173,7 +172,7 @@
                       };
                     };
                   }
-                ) hosts;
+                ) { } cfg.hosts;
               in
               lib.mkIf config.services.coco-ddns.enable {
                 systemd.services = serviceUnits;
