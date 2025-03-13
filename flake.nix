@@ -149,7 +149,7 @@
                         --proxy=${toString (instance.proxy or true)}
                     '';
                   in
-                  ("coco-ddns-${name}" {
+                  (lib.nameValuePair "coco-ddns-${name}" {
                     description = "coco-ddns service for ${name}";
                     serviceConfig = {
                       Type = "oneshot";
@@ -163,7 +163,7 @@
                 systemd.services = serviceUnits;
                 systemd.timers = lib.mapAttrs' (
                   name: instance:
-                  ("coco-ddns-${name}" {
+                  (lib.nameValuePair "coco-ddns-${name}" {
                     wantedBy = [ "timers.target" ];
                     timerConfig = {
                       # Use the instance-specific interval if provided.
