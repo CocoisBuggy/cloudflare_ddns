@@ -141,7 +141,7 @@
                         --record=${pass "record"} \
                         --domain_name=${name} \
                         --api_key=${readFile instance.api_key_file} \
-                        --proxy=${instance.proxy or true}
+                        --proxy=${toString (instance.proxy or true)}
                     '';
                   in
                   {
