@@ -131,7 +131,12 @@
                 cfg = config.services.coco-ddns;
                 readFile = file_name: "$(cat ${file_name})";
 
-                serviceUnits = lib.mapAttrs (
+                # Yowza I am not totally sold on this particular naming approach but
+                # do NOTE the ' at the end of the function denotes this as the prime
+                # variant of this function. I reckon mathematicians should not be allowed
+                # to go anywhere near a function name if they're going to do this kind of
+                # kak.
+                serviceUnits = lib.mapAttrs' (
                   name: instance:
                   let
                     pass = val: if instance ? "${val}_file" then "$(cat ${instance."${val}_file"})" else val;
@@ -144,33 +149,29 @@
                         --proxy=${toString (instance.proxy or true)}
                     '';
                   in
-                  {
-                    "coco-ddns-${name}" = {
-                      description = "coco-ddns service for ${name}";
-                      serviceConfig = {
-                        Type = "oneshot";
-                        ExecStart = script;
-                        Restart = "no";
-                      };
+                  ("coco-ddns-${name}" {
+                    description = "coco-ddns service for ${name}";
+                    serviceConfig = {
+                      Type = "oneshot";
+                      ExecStart = script;
+                      Restart = "no";
                     };
-                  }
+                  })
                 ) cfg.hosts;
-
-                # Create a systemd timer for each enabled instance.
-                timerUnits = lib.mapAttrs (name: instance: {
-                  "coco-ddns-${name}" = {
+              in
+              lib.mkIf config.services.coco-ddns.enable {
+                systemd.services = serviceUnits;
+                systemd.timers = lib.mapAttrs' (
+                  name: instance:
+                  ("coco-ddns-${name}" {
                     wantedBy = [ "timers.target" ];
                     timerConfig = {
                       # Use the instance-specific interval if provided.
                       OnCalendar = instance.interval or "*-*-* 00/05:00:00";
                       Persistent = true;
                     };
-                  };
-                }) { } cfg.hosts;
-              in
-              lib.mkIf config.services.coco-ddns.enable {
-                systemd.services = serviceUnits;
-                systemd.timers = timerUnits;
+                  })
+                ) cfg.hosts;
               };
           };
       }
