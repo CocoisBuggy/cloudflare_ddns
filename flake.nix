@@ -78,7 +78,7 @@
           }:
           let
             inherit (lib) types;
-            instanceOpts =
+            hostOptions =
               { ... }:
               {
                 options = {
@@ -122,7 +122,7 @@
             options.services.coco-ddns = {
               enable = lib.mkEnableOption "Enable coco-ddns service";
               hosts = lib.mkOption {
-                type = with types; attrsOf (submodule instanceOpts);
+                type = with types; attrsOf (submodule hostOptions);
               };
             };
 
@@ -131,9 +131,8 @@
                 cfg = config.services.coco-ddns;
                 readFile = file_name: "$(cat ${file_name})";
 
-                # Create a systemd service for each instance.
-                serviceUnits = lib.foldAttrs (
-                  acc: name: instance:
+                serviceUnits = lib.mapAttrs (
+                  name: instance:
                   let
                     pass = val: if instance ? "${val}_file" then "$(cat ${instance."${val}_file"})" else val;
                     script = pkgs.writers.writeBash "coco-ddns-wrapper-${name}" ''
@@ -145,8 +144,7 @@
                         --proxy=${instance.proxy or true}
                     '';
                   in
-                  acc
-                  // {
+                  {
                     "coco-ddns-${name}" = {
                       description = "coco-ddns service for ${name}";
                       serviceConfig = {
@@ -156,23 +154,19 @@
                       };
                     };
                   }
-                ) { } cfg.hosts;
+                ) cfg.hosts;
 
                 # Create a systemd timer for each enabled instance.
-                timerUnits = lib.foldAttrs (
-                  acc: name: instance:
-                  acc
-                  // {
-                    "coco-ddns-${name}" = {
-                      wantedBy = [ "timers.target" ];
-                      timerConfig = {
-                        # Use the instance-specific interval if provided.
-                        OnCalendar = instance.interval or "*-*-* 00/05:00:00";
-                        Persistent = true;
-                      };
+                timerUnits = lib.mapAttrs (name: instance: {
+                  "coco-ddns-${name}" = {
+                    wantedBy = [ "timers.target" ];
+                    timerConfig = {
+                      # Use the instance-specific interval if provided.
+                      OnCalendar = instance.interval or "*-*-* 00/05:00:00";
+                      Persistent = true;
                     };
-                  }
-                ) { } cfg.hosts;
+                  };
+                }) { } cfg.hosts;
               in
               lib.mkIf config.services.coco-ddns.enable {
                 systemd.services = serviceUnits;
