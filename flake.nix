@@ -137,7 +137,7 @@
                 # to go anywhere near a function name if they're going to do this kind of
                 # kak.
                 serviceUnits = lib.mapAttrs' (
-                  name: instance: nameValuePair:
+                  name: instance:
                   let
                     pass = val: if instance ? "${val}_file" then "$(cat ${instance."${val}_file"})" else val;
                     script = pkgs.writers.writeBash "coco-ddns-wrapper-${name}" ''
