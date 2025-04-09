@@ -38,14 +38,14 @@ and then in your `configuration.nix`
                 zone_id_file = "/run/secrets/cloudflare/zone_id";
                 record_file = "/run/secrets/cloudflare/record_id";
                 api_key_file = "/run/secrets/cloudflare/token";
-            }
+            };
             "wireguard.example.com" = {
-                disable_proxy = true;
+                proxy = false;
                 interval = "*-*-* 00/5:00:00";
                 zone_id_file = "/run/secrets/cloudflare/zone_id";
-                record_file = "/run/secrets/cloudflare/record_id";
+                record = "sdfkjsdfkjsdf";
                 api_key_file = "/run/secrets/cloudflare/token";
-            };;
+            };
         };
     };
     ...

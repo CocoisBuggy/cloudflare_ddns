@@ -35,7 +35,6 @@
             ];
 
             propagatedBuildInputs = with pythonPackages; [
-              # Add your Python dependencies here
               requests
             ];
 
