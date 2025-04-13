@@ -109,6 +109,7 @@ def main():
             api_key=args.api_key,
             domain_name=args.domain_name,
             dry_run=False,
+            cloudflare_proxy=args.proxy,
         )
     else:
         log.error("Public IP not available. Skipping DNS update.")
