@@ -51,7 +51,7 @@ def update_dns_record(
     data = {
         "comment": f"Domain verification record @ ({datetime.now()})",
         "content": ip,
-        "proxied": "true" if cloudflare_proxy else "false",
+        "proxied": cloudflare_proxy,
         "ttl": 3600,
         "type": "A",
     }
@@ -81,6 +81,9 @@ def update_dns_record(
 
 def main():
     args = parser.parse_args()
+    if type(args.proxy) is not bool:
+        args.proxy = args.proxy == "true" or args.proxy == "1"
+
     # Configure logging
     logging.basicConfig(
         filename="ddns_update.log",
