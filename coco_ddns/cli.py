@@ -51,7 +51,7 @@ def update_dns_record(
     data = {
         "comment": f"Domain verification record @ ({datetime.now()})",
         "content": ip,
-        "proxied": cloudflare_proxy,
+        "proxied": "true" if cloudflare_proxy else "false",
         "ttl": 3600,
         "type": "A",
     }
